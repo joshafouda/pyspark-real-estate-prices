@@ -1,0 +1,71 @@
+{
+    "CATEGORICAL_COLS": [
+        "property_type",
+        "energy_performance_category",
+        "ghg_category",
+        "exposition"
+    ],
+    "NUMERIC_COLS": [
+        "size",
+        "price",
+        "land_size",
+        "nb_rooms",
+        "floor",
+        "energy_performance_value",
+        "ghg_value",
+        "nb_bedrooms",
+        "nb_bathrooms",
+        "nb_parking_places",
+        "nb_boxes",
+        "nb_photos"
+    ],
+    "RARE_CATEGORY_THRESHOLD": 0.05,
+    "EIFFEL_LAT": 48.85837,
+    "EIFFEL_LON": 2.294481,
+    "capping_values": {
+        "size": {
+            "lower": 1.0,
+            "upper": 411311.0
+        },
+        "land_size": {
+            "lower": 1.0,
+            "upper": 6203700.0
+        },
+        "nb_rooms": {
+            "lower": 0.0,
+            "upper": 130.0
+        },
+        "floor": {
+            "lower": 1.0,
+            "upper": 55.0
+        },
+        "energy_performance_value": {
+            "lower": 0.0,
+            "upper": 100000.0
+        },
+        "ghg_value": {
+            "lower": 0.0,
+            "upper": 15131.0
+        },
+        "nb_bedrooms": {
+            "lower": 0.0,
+            "upper": 55.0
+        },
+        "nb_bathrooms": {
+            "lower": 0.0,
+            "upper": 3.0
+        },
+        "nb_parking_places": {
+            "lower": 0.0,
+            "upper": 1.0
+        },
+        "nb_boxes": {
+            "lower": 0.0,
+            "upper": 1.0
+        },
+        "nb_photos": {
+            "lower": 1.0,
+            "upper": 42.0
+        }
+    }
+}

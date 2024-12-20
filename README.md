@@ -1,6 +1,6 @@
 # Real estate price prediction by Institut Louis Bachelier 
 
-***(15/01/2022) The first version of the reduced_images folder contained a corrupted image for ann_35876173. If you face an issue, you can either remove the problematic image in the folder or download the new version of the reduced_images folder that is available. ***
+***(15/01/2022) The first version of the reduced_images folder contained a corrupted image for ann_35876173. If you face an issue, you can either remove the problematic image in the folder or download the new version of the reduced_images folder that is available.***
 
 ## Challenge context
 

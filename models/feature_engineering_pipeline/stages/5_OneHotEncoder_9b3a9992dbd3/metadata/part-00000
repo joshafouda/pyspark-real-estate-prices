@@ -1,0 +1,1 @@
+{"class":"org.apache.spark.ml.feature.OneHotEncoderModel","timestamp":1734690900202,"sparkVersion":"3.5.1","uid":"OneHotEncoder_9b3a9992dbd3","paramMap":{"inputCols":["ghg_category_indexed"],"dropLast":true,"outputCols":["ghg_category_encoded"]},"defaultParamMap":{"dropLast":true,"handleInvalid":"error","outputCol":"OneHotEncoder_9b3a9992dbd3__output"}}
