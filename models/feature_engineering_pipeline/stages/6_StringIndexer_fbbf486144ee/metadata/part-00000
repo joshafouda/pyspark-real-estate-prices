@@ -1,0 +1,1 @@
+{"class":"org.apache.spark.ml.feature.StringIndexerModel","timestamp":1734698054301,"sparkVersion":"3.5.1","uid":"StringIndexer_fbbf486144ee","paramMap":{"inputCol":"exposition","outputCol":"exposition_indexed","handleInvalid":"keep"},"defaultParamMap":{"stringOrderType":"frequencyDesc","outputCol":"StringIndexer_fbbf486144ee__output","handleInvalid":"error"}}

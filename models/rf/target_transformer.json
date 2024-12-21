@@ -1,0 +1,12 @@
+{
+    "target_col": "price",
+    "transformed_col": "log_price",
+    "fitted": true,
+    "stats": {
+        "original_count": 134.0,
+        "original_mean": 883820.895522388,
+        "original_std": 618354.4334964824,
+        "log_mean": 13.410268752251138,
+        "log_std": 0.8010069103903216
+    }
+}

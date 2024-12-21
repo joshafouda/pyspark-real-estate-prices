@@ -1,0 +1,1 @@
+{"class":"org.apache.spark.ml.feature.StringIndexerModel","timestamp":1734698051412,"sparkVersion":"3.5.1","uid":"StringIndexer_7649552615d4","paramMap":{"handleInvalid":"keep","outputCol":"ghg_category_indexed","inputCol":"ghg_category"},"defaultParamMap":{"handleInvalid":"error","stringOrderType":"frequencyDesc","outputCol":"StringIndexer_7649552615d4__output"}}

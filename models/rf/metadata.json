@@ -1,0 +1,22 @@
+{
+    "best_params": {
+        "bootstrap": true,
+        "cacheNodeIds": false,
+        "checkpointInterval": 10,
+        "featureSubsetStrategy": "auto",
+        "featuresCol": "features",
+        "impurity": "variance",
+        "labelCol": "log_price",
+        "leafCol": "",
+        "maxBins": 32,
+        "maxDepth": 15,
+        "maxMemoryInMB": 256,
+        "minInfoGain": 0.0,
+        "minInstancesPerNode": 1,
+        "minWeightFractionPerNode": 0.0,
+        "numTrees": 50,
+        "predictionCol": "prediction",
+        "seed": -3861508175039148816,
+        "subsamplingRate": 1.0
+    }
+}

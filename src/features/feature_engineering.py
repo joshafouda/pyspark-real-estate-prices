@@ -188,6 +188,25 @@ class FeatureEngineering:
                 )
                 stages.append(encoder)
         
+        # Sélectionner les colonnes pour le vecteur de features
+        feature_cols = [
+            # Colonnes numériques (sauf price)
+            *[col for col in self.NUMERIC_COLS if col != 'price'],
+            # Features dérivées
+            'distance_to_eiffel', 'rooms_per_m2', 'is_house',
+            'log_size', 'log_land_size',
+            # Colonnes encodées
+            *[f"{col}_encoded" for col in self.CATEGORICAL_COLS]
+        ]
+        
+        # Ajouter l'assembleur de features
+        assembler = VectorAssembler(
+            inputCols=feature_cols,
+            outputCol="features",
+            handleInvalid="skip"
+        )
+        stages.append(assembler)
+        
         # Créer et ajuster le pipeline
         self.fitted_pipeline = Pipeline(stages=stages).fit(df)
         
