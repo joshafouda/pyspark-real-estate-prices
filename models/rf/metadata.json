@@ -1,4 +1,25 @@
 {
+    "model_type": "RandomForestRegressionModel",
+    "training_date": "2024-12-22T16:23:23.585276",
+    "feature_columns": [
+        "size",
+        "price",
+        "land_size",
+        "nb_rooms",
+        "floor",
+        "energy_performance_value",
+        "ghg_value",
+        "nb_bedrooms",
+        "nb_bathrooms",
+        "nb_parking_places",
+        "nb_boxes",
+        "nb_photos",
+        "property_type",
+        "energy_performance_category",
+        "ghg_category",
+        "exposition"
+    ],
+    "target_column": "price",
     "best_params": {
         "bootstrap": true,
         "cacheNodeIds": false,
@@ -6,17 +27,37 @@
         "featureSubsetStrategy": "auto",
         "featuresCol": "features",
         "impurity": "variance",
-        "labelCol": "log_price",
+        "labelCol": "price",
         "leafCol": "",
         "maxBins": 32,
-        "maxDepth": 15,
+        "maxDepth": 10,
         "maxMemoryInMB": 256,
         "minInfoGain": 0.0,
-        "minInstancesPerNode": 1,
+        "minInstancesPerNode": 2,
         "minWeightFractionPerNode": 0.0,
         "numTrees": 50,
         "predictionCol": "prediction",
-        "seed": -3861508175039148816,
+        "seed": -7101858521471224084,
         "subsamplingRate": 1.0
-    }
+    },
+    "CATEGORICAL_COLS": [
+        "property_type",
+        "energy_performance_category",
+        "ghg_category",
+        "exposition"
+    ],
+    "NUMERIC_COLS": [
+        "size",
+        "price",
+        "land_size",
+        "nb_rooms",
+        "floor",
+        "energy_performance_value",
+        "ghg_value",
+        "nb_bedrooms",
+        "nb_bathrooms",
+        "nb_parking_places",
+        "nb_boxes",
+        "nb_photos"
+    ]
 }

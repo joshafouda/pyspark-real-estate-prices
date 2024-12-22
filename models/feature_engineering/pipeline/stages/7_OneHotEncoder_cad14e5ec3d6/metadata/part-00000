@@ -1,0 +1,1 @@
+{"class":"org.apache.spark.ml.feature.OneHotEncoderModel","timestamp":1734878874603,"sparkVersion":"3.5.1","uid":"OneHotEncoder_cad14e5ec3d6","paramMap":{"handleInvalid":"error","dropLast":true,"inputCols":["exposition_indexed"],"outputCols":["exposition_encoded"]},"defaultParamMap":{"outputCol":"OneHotEncoder_cad14e5ec3d6__output","handleInvalid":"error","dropLast":true}}

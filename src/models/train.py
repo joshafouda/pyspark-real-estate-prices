@@ -4,13 +4,15 @@ Module pour l'entraînement des modèles de prédiction de prix immobiliers.
 from pathlib import Path
 import json
 from typing import Dict, Any, Optional, Union
+from datetime import datetime
 
 from pyspark.sql import SparkSession, DataFrame
-from pyspark.ml.regression import RandomForestRegressor, LinearRegression, GBTRegressor
+from pyspark.ml.regression import RandomForestRegressor, LinearRegression, GBTRegressor, RandomForestRegressionModel
 from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
 
 from src.features.target_transformer import TargetTransformer
+from src.features.feature_engineering import FeatureEngineering
 
 class ModelTrainer:
     """Classe pour l'entraînement et l'évaluation des modèles."""
@@ -33,6 +35,7 @@ class ModelTrainer:
         
         self.model = None
         self.fitted_model = None
+        self.feature_engineering = None
         self.target_transformer = None
         self.feature_cols = None
         self.best_params = None
@@ -84,7 +87,7 @@ class ModelTrainer:
         # Initialiser le modèle
         base_params = {
             "featuresCol": "features",
-            "labelCol": self.target_transformer.transformed_col,
+            "labelCol": "price",  # Utilisation directe de la colonne price
             **(params or {})
         }
         
@@ -96,7 +99,7 @@ class ModelTrainer:
             
             # Configurer la validation croisée
             evaluator = RegressionEvaluator(
-                labelCol=self.target_transformer.transformed_col,
+                labelCol="price",  # Utilisation directe de la colonne price
                 predictionCol="prediction",
                 metricName="rmse"
             )
@@ -129,52 +132,62 @@ class ModelTrainer:
         Returns:
             Dict avec les métriques d'évaluation
         """
-        if self.fitted_model is None:
-            raise ValueError("Modèle non entraîné. Appelez train() d'abord.")
+        if not self.fitted_model:
+            raise ValueError("Le modèle n'a pas encore été entraîné")
         
         # Faire les prédictions
         predictions = self.fitted_model.transform(test_data)
         
-        # Transformer les prédictions en prix réels
-        predictions = self.target_transformer.inverse_transform(
-            predictions,
-            prediction_col="prediction"
-        )
+        # Calculer les métriques
+        evaluator = RegressionEvaluator(labelCol="price", 
+                                      predictionCol="prediction")
         
-        # Évaluer les prédictions
         metrics = {}
-        evaluator = RegressionEvaluator(
-            labelCol=self.target_transformer.target_col,
-            predictionCol="prediction_price"
-        )
-        
         for metric in ["rmse", "r2", "mae"]:
             evaluator.setMetricName(metric)
             metrics[metric] = evaluator.evaluate(predictions)
-        
+            
         return metrics
     
-    def save_model(self, model_dir: Union[str, Path]) -> None:
+    def save_model(self, model_dir: Union[str, Path], overwrite: bool = False):
         """Sauvegarde le modèle entraîné et ses métadonnées.
         
         Args:
             model_dir: Chemin du dossier où sauvegarder le modèle
+            overwrite: Option pour écraser le modèle existant
         """
-        if self.fitted_model is None:
-            raise ValueError("Modèle non entraîné. Appelez train() d'abord.")
+        if not self.fitted_model:
+            raise ValueError("Le modèle n'a pas encore été entraîné")
         
+        # Créer le dossier si nécessaire
         model_dir = Path(model_dir)
         model_dir.mkdir(parents=True, exist_ok=True)
         
         # Sauvegarder le modèle
-        self.fitted_model.save(str(model_dir / "model"))
+        if overwrite:
+            self.fitted_model.write().overwrite().save(str(model_dir / "model"))
+        else:
+            self.fitted_model.save(str(model_dir / "model"))
         
-        # Sauvegarder le transformateur de variable cible
+        # Sauvegarder le pipeline de feature engineering
+        fe_pipeline_dir = model_dir / "feature_engineering"
+        if fe_pipeline_dir.exists() and overwrite:
+            import shutil
+            shutil.rmtree(str(fe_pipeline_dir))
+        self.feature_engineering.save(str(fe_pipeline_dir))
+        
+        # Sauvegarder le transformateur de target
         self.target_transformer.save(str(model_dir / "target_transformer.json"))
         
         # Sauvegarder les métadonnées
         metadata = {
-            "best_params": self.best_params
+            "model_type": self.fitted_model.__class__.__name__,
+            "training_date": datetime.now().isoformat(),
+            "feature_columns": self.feature_engineering.NUMERIC_COLS + self.feature_engineering.CATEGORICAL_COLS,
+            "target_column": "price",
+            "best_params": self.best_params if self.best_params else {},
+            "CATEGORICAL_COLS": self.feature_engineering.CATEGORICAL_COLS,
+            "NUMERIC_COLS": self.feature_engineering.NUMERIC_COLS
         }
         
         with open(model_dir / "metadata.json", "w") as f:
@@ -186,20 +199,25 @@ class ModelTrainer:
         Args:
             model_dir: Chemin du dossier contenant le modèle
         """
+        from pyspark.ml.regression import RandomForestRegressionModel
+        
         model_dir = Path(model_dir)
         
         # Charger le modèle
-        self.fitted_model = RandomForestRegressor.load(str(model_dir / "model"))
+        self.fitted_model = RandomForestRegressionModel.load(str(model_dir / "model"))
         
-        # Charger le transformateur de variable cible
-        self.target_transformer = TargetTransformer.load(
-            str(model_dir / "target_transformer.json")
-        )
+        # Charger le pipeline de feature engineering
+        self.feature_engineering = FeatureEngineering(strict_mode=False)  # Mode permissif pour l'inférence
+        self.feature_engineering.load(str(model_dir / "feature_engineering"))
         
         # Charger les métadonnées
         with open(model_dir / "metadata.json", "r") as f:
             metadata = json.load(f)
-            self.best_params = metadata["best_params"]
+            self.best_params = metadata.get("best_params", {})
+            
+            # Charger les colonnes depuis les métadonnées
+            self.feature_engineering.CATEGORICAL_COLS = metadata.get("CATEGORICAL_COLS", [])
+            self.feature_engineering.NUMERIC_COLS = metadata.get("NUMERIC_COLS", [])
     
     def _get_param_grid(self, model_type: str) -> list:
         """Retourne la grille de paramètres pour la validation croisée.
@@ -212,27 +230,31 @@ class ModelTrainer:
         """
         if model_type == "rf":
             return ParamGridBuilder() \
-                .addGrid(self.model.numTrees, [10, 50, 100]) \
-                .addGrid(self.model.maxDepth, [5, 10, 15]) \
-                .addGrid(self.model.minInstancesPerNode, [1, 2, 4]) \
+                .addGrid(self.model.numTrees, [10, 50]) \
+                .addGrid(self.model.maxDepth, [5, 10]) \
+                .addGrid(self.model.minInstancesPerNode, [2, 4]) \
                 .build()
         elif model_type == "gbt":
             return ParamGridBuilder() \
-                .addGrid(self.model.maxDepth, [5, 10, 15]) \
-                .addGrid(self.model.maxIter, [10, 50, 100]) \
+                .addGrid(self.model.maxDepth, [5, 10]) \
+                .addGrid(self.model.maxIter, [10, 50]) \
                 .build()
         else:  # linear regression
             return ParamGridBuilder() \
-                .addGrid(self.model.regParam, [0.01, 0.1, 1.0]) \
-                .addGrid(self.model.elasticNetParam, [0.0, 0.5, 1.0]) \
+                .addGrid(self.model.regParam, [0.1, 1.0]) \
+                .addGrid(self.model.elasticNetParam, [0.0, 1.0]) \
                 .build()
 
     def cleanup(self):
         """Nettoie les ressources Spark."""
         if self.spark:
-            self.spark.stop()
-            self.spark = None
-            
+            try:
+                self.spark.stop()
+            except Exception:
+                pass  # Ignorer les erreurs de fermeture
+            finally:
+                self.spark = None
+
     def __del__(self):
         """Destructeur de la classe."""
         self.cleanup()
@@ -252,15 +274,17 @@ if __name__ == "__main__":
 
     # Parser les arguments
     parser = argparse.ArgumentParser(description='Entraînement des modèles')
-    parser.add_argument('--input-train', type=str, default='data/processed/train_transformed.parquet',
-                       help='Chemin vers les données d\'entraînement transformées')
-    parser.add_argument('--input-validation', type=str, default='data/processed/validation_transformed.parquet',
-                       help='Chemin vers les données de validation transformées')
+    parser.add_argument('--input-train', type=str, default='data/raw/train.parquet',
+                       help='Chemin vers les données d\'entraînement')
+    parser.add_argument('--input-validation', type=str, default='data/raw/validation.parquet',
+                       help='Chemin vers les données de validation')
     parser.add_argument('--output-dir', type=str, default='models',
                        help='Dossier de sortie pour les modèles')
     parser.add_argument('--model-type', type=str, default='rf',
                        choices=['rf', 'lr', 'gbt'],
                        help='Type de modèle à entraîner')
+    parser.add_argument('--overwrite', action='store_true',
+                       help='Écraser le modèle existant')
     
     args = parser.parse_args()
 
@@ -276,11 +300,41 @@ if __name__ == "__main__":
         train_data = spark.read.parquet(args.input_train)
         validation_data = spark.read.parquet(args.input_validation)
         
-        # Préparation des données
+        # Initialiser le feature engineering
+        logger.info("Initialisation du feature engineering...")
+        trainer.feature_engineering = FeatureEngineering(spark_session=spark, strict_mode=True)
+        trainer.feature_engineering.CATEGORICAL_COLS = [
+            'property_type', 
+            'energy_performance_category',
+            'ghg_category', 
+            'exposition'
+        ]
+        
+        trainer.feature_engineering.NUMERIC_COLS = [
+            'size',
+            'price',
+            'land_size',
+            'nb_rooms',
+            'floor', 
+            'energy_performance_value', 
+            'ghg_value',
+            'nb_bedrooms', 
+            'nb_bathrooms', 
+            'nb_parking_places',
+            'nb_boxes', 
+            'nb_photos'
+        ]
+        
+        # Transformation des données
+        logger.info("Application du feature engineering...")
+        train_transformed = trainer.feature_engineering.fit_transform(train_data)
+        validation_transformed = trainer.feature_engineering.transform(validation_data)
+        
+        # Préparation des données (transformation de la cible)
         logger.info("Préparation des données...")
         train_prepared, val_prepared = trainer.prepare_data(
-            train_data=train_data,
-            validation_data=validation_data
+            train_data=train_transformed,
+            validation_data=validation_transformed
         )
         
         # Entraînement du modèle
@@ -288,7 +342,8 @@ if __name__ == "__main__":
         model = trainer.train(
             train_data=train_prepared,
             model_type=args.model_type,
-            use_cv=True
+            use_cv=True,
+            cv_folds=3  # Réduire le nombre de folds pour la validation croisée
         )
         
         # Évaluation
@@ -300,7 +355,7 @@ if __name__ == "__main__":
         # Sauvegarde du modèle
         output_dir = Path(args.output_dir)
         model_path = output_dir / args.model_type
-        trainer.save_model(model_path)
+        trainer.save_model(model_path, overwrite=args.overwrite)
         logger.info(f"Modèle sauvegardé dans : {model_path}")
 
     except Exception as e:

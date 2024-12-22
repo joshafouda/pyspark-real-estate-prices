@@ -4,3 +4,4 @@ pandas
 pyspark
 scikit-learn
 seaborn
+streamlit

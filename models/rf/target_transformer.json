@@ -3,10 +3,10 @@
     "transformed_col": "log_price",
     "fitted": true,
     "stats": {
-        "original_count": 134.0,
-        "original_mean": 883820.895522388,
-        "original_std": 618354.4334964824,
-        "log_mean": 13.410268752251138,
-        "log_std": 0.8010069103903216
+        "original_count": 37368.0,
+        "original_mean": 343221.2720509527,
+        "original_std": 308912.9143498637,
+        "log_mean": 12.42942575466717,
+        "log_std": 0.8087476706211179
     }
 }

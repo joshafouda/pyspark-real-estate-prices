@@ -10,6 +10,7 @@ setup(
         "matplotlib",
         "seaborn",
         "pyspark",
-        "scikit-learn"
+        "scikit-learn",
+        "streamlit"
     ]
 )
