@@ -2,6 +2,28 @@
 
 ***(15/01/2022) The first version of the reduced_images folder contained a corrupted image for ann_35876173. If you face an issue, you can either remove the problematic image in the folder or download the new version of the reduced_images folder that is available.***
 
+## Project Overview
+The project is a web application designed to predict real estate prices in France using a combination of traditional tabular data and images of the properties. The application leverages machine learning models to provide more accurate price estimates by incorporating visual data.
+
+## Directory Structure
+- **`.git`**: Contains version control information.
+- **`.venv`**: Virtual environment for managing Python dependencies.
+- **`README.md`**: Documentation for understanding the project and its setup.
+- **`config/`**: Configuration files for setting up various aspects of the project.
+- **`data/`**: Directory containing datasets used for training and testing.
+- **`data_analysis.py`**: Script for performing data analysis.
+- **`models/`**: Contains pre-trained machine learning models.
+- **`notebooks/`**: Jupyter notebooks for exploratory data analysis and experimentation.
+- **`predictions.csv`**: File to store prediction results.
+- **`reports/`**: Directory for storing generated reports and visualizations.
+- **`requirements.txt`**: Lists all Python dependencies required for the project.
+- **`setup.py`**: Script for setting up the Python package.
+- **`src/`**: Source code directory containing the main application logic.
+  - **`webapp/`**: Contains the web application code.
+  - **`features/`**: Modules for feature engineering.
+  - **`models/`**: Code related to model training and evaluation.
+  - **`utils/`**: Utility functions and helpers.
+
 ## Challenge context
 
 Institut Louis Bachelier (ILB) is a sponsored research network in Economics and Finance. It is an association as defined by the law of 1901 and was created in 2008 at the instigation of the Treasury and Caisse des Dépôts et Consignations. Through its activities, it aims to involve academics, public authorities and companies in research projects as well as in scientific events and other forums of exchange. The dozens of research projects hosted at ILBfocus on four societal transitions: environmental, digital, demographic and financial.
